@@ -51,7 +51,7 @@ public:
     QJsonValue::Type type() const;
 
 public:
-    static QJsonTreeItem *load(const QJsonValue &value, QJsonTreeItem *parent = 0);
+    static QJsonTreeItem *load(const QJsonValue &value, QJsonTreeItem *parent = 0, const QString &key="root");
 
 private:
     QString mKey;
@@ -75,6 +75,7 @@ public:
     bool load(const QString &fileName);
     bool load(QIODevice *device);
     bool loadJson(const QByteArray &json);
+    bool appendToArray(const QByteArray &json);
     QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) Q_DECL_OVERRIDE;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const Q_DECL_OVERRIDE;

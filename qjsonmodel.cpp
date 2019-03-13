@@ -88,13 +88,14 @@ QJsonValue::Type QJsonTreeItem::type() const
     return mValue.type();
 }
 
-QJsonTreeItem *QJsonTreeItem::load(const QJsonValue &value, QJsonTreeItem *parent)
+QJsonTreeItem *QJsonTreeItem::load(const QJsonValue &value, QJsonTreeItem *parent, const QString &key)
 {
     QJsonTreeItem *rootItem = new QJsonTreeItem(parent);
-    rootItem->setKey("root");
+    rootItem->setKey(key);
 
     if (value.isObject())
     {
+        rootItem->setValue(QJsonObject());
         //Get all QJsonValue childs
         for (QString key : value.toObject().keys())
         {
@@ -106,6 +107,7 @@ QJsonTreeItem *QJsonTreeItem::load(const QJsonValue &value, QJsonTreeItem *paren
     }
     else if (value.isArray())
     {
+        rootItem->setValue(QJsonArray());
         //Get all QJsonValue childs
         int index = 0;
         for (QJsonValue v : value.toArray())
@@ -201,6 +203,29 @@ bool QJsonModel::loadJson(const QByteArray &json)
     {
         mRootItem = QJsonTreeItem::load(QJsonValue(jdoc.object()));
     }
+    endResetModel();
+
+    return true;
+}
+
+bool QJsonModel::appendToArray(const QByteArray &json)
+{
+    if (mRootItem->type() != QJsonValue::Array)
+    {
+        return false;
+    }
+
+    auto jdoc = QJsonDocument::fromJson(json);
+
+    if (jdoc.isNull())
+    {
+        qDebug() << Q_FUNC_INFO << "cannot load json";
+        return false;
+    }
+
+    beginResetModel();
+    auto value = jdoc.isArray() ? QJsonValue(jdoc.array()) : QJsonValue(jdoc.object());
+    mRootItem->appendChild(QJsonTreeItem::load(value, mRootItem, QString::number(mRootItem->childCount())));
     endResetModel();
 
     return true;
