@@ -208,7 +208,7 @@ bool QJsonModel::loadJson(const QByteArray &json)
     return true;
 }
 
-bool QJsonModel::appendToArray(const QByteArray &json)
+bool QJsonModel::appendToArray(const QByteArray &json, const QString &key)
 {
     if (mRootItem->type() != QJsonValue::Array)
     {
@@ -227,7 +227,7 @@ bool QJsonModel::appendToArray(const QByteArray &json)
 
     beginResetModel();
     auto value = jdoc.isArray() ? QJsonValue(jdoc.array()) : QJsonValue(jdoc.object());
-    mRootItem->appendChild(QJsonTreeItem::load(value, mRootItem, QString::number(mRootItem->childCount())));
+    mRootItem->appendChild(QJsonTreeItem::load(value, mRootItem, key.isEmpty() ? QString::number(mRootItem->childCount()) : key));
     endResetModel();
 
     return true;
