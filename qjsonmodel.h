@@ -49,6 +49,8 @@ public:
     const QString &key() const;
     const QJsonValue &value() const;
     QJsonValue::Type type() const;
+    int maxChildCount() const;
+    void setMaxChildCount(int value);
 
 public:
     static QJsonTreeItem *load(const QJsonValue &value, QJsonTreeItem *parent = 0, const QString &key="root");
@@ -58,6 +60,7 @@ private:
     QJsonValue mValue;
     QList<QJsonTreeItem*> mChilds;
     QJsonTreeItem *mParent;
+    int mMaxChildCount;
 
 };
 
@@ -76,6 +79,8 @@ public:
     bool load(QIODevice *device);
     bool loadJson(const QByteArray &json);
     bool appendToArray(const QByteArray &json, const QString &key="");
+    int maxArraySize() const;
+    void setMaxArraySize(int value);
     QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) Q_DECL_OVERRIDE;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const Q_DECL_OVERRIDE;

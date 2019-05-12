@@ -30,6 +30,7 @@
 
 QJsonTreeItem::QJsonTreeItem(QJsonTreeItem *parent)
     : mParent(parent)
+    , mMaxChildCount(0)
 {
 }
 
@@ -41,6 +42,11 @@ QJsonTreeItem::~QJsonTreeItem()
 void QJsonTreeItem::appendChild(QJsonTreeItem *item)
 {
     mChilds.append(item);
+
+    if ((mMaxChildCount > 0) && (mChilds.size() > mMaxChildCount))
+    {
+        mChilds.erase(mChilds.begin(), mChilds.begin() + (mChilds.size() - mMaxChildCount));
+    }
 }
 
 QJsonTreeItem *QJsonTreeItem::child(int row)
@@ -86,6 +92,16 @@ const QJsonValue &QJsonTreeItem::value() const
 QJsonValue::Type QJsonTreeItem::type() const
 {
     return mValue.type();
+}
+
+int QJsonTreeItem::maxChildCount() const
+{
+    return mMaxChildCount;
+}
+
+void QJsonTreeItem::setMaxChildCount(int value)
+{
+    mMaxChildCount = value;
 }
 
 QJsonTreeItem *QJsonTreeItem::load(const QJsonValue &value, QJsonTreeItem *parent, const QString &key)
@@ -231,6 +247,16 @@ bool QJsonModel::appendToArray(const QByteArray &json, const QString &key)
     endResetModel();
 
     return true;
+}
+
+int QJsonModel::maxArraySize() const
+{
+    return mRootItem->maxChildCount();
+}
+
+void QJsonModel::setMaxArraySize(int value)
+{
+    mRootItem->setMaxChildCount(value);
 }
 
 QVariant QJsonModel::data(const QModelIndex &index, int role) const
