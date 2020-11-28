@@ -185,11 +185,13 @@ bool QJsonModel::load(QIODevice *device)
 
 bool QJsonModel::loadJson(const QByteArray &json)
 {
-    auto jdoc = QJsonDocument::fromJson(json);
+    QJsonParseError parse_error;
+    auto jdoc = QJsonDocument::fromJson(json, &parse_error);
 
     if (jdoc.isNull())
     {
-        qDebug() << Q_FUNC_INFO << "cannot load json";
+        qDebug() << Q_FUNC_INFO << "Cannot load json." << parse_error.errorString();
+        qDebug() << "The input json string is:" << json;
         return false;
     }
 
