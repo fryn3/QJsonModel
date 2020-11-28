@@ -32,10 +32,15 @@
 #include <QJsonObject>
 #include <QIcon>
 
-
+/*!
+ * \class QJsonTreeItem
+ * \brief QJsonTreeItem Tree Node (~data storage for one item).
+ *
+ * Each node has a key and a value. QJsonTreeItem also saves information about
+ * its parent and child nodes. QJsonTreeItem is used in the QJsonModel class.
+ */
 class QJsonTreeItem
 {
-
 public:
     QJsonTreeItem(QJsonTreeItem *parent = nullptr);
     ~QJsonTreeItem();
@@ -43,6 +48,11 @@ public:
     QJsonTreeItem *child(int row);
     QJsonTreeItem *parent();
     int childCount() const;
+
+    /*!
+     * \brief Returns the index from the parent.
+     * \return the index from the parent list mChilds.
+     */
     int row() const;
     void setKey(const QString &key);
     void setValue(const QJsonValue &value);
@@ -61,7 +71,10 @@ private:
 
 };
 
-
+/*!
+ * \class QJsonModel
+ * \brief The QJsonModel class outputs a JSON file in tree format.
+ */
 class QJsonModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -75,6 +88,15 @@ public:
     bool load(const QString &fileName);
     bool load(QIODevice *device);
     bool loadJson(const QByteArray &json);
+
+    /*!
+     * \brief Appending a JSON node at the end of the array
+     *
+     * Works only if mRootItem->type() == QJsonValue::Array.
+     * \param json - array in JSON format.
+     * \param key - the key of the node for QJsonTreeItem.
+     * \return true if success.
+     */
     bool appendToArray(const QByteArray &json, const QString &key= QString());
     QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) Q_DECL_OVERRIDE;
