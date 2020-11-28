@@ -75,7 +75,7 @@ public:
     bool load(const QString &fileName);
     bool load(QIODevice *device);
     bool loadJson(const QByteArray &json);
-    bool appendToArray(const QByteArray &json, const QString &key="");
+    bool appendToArray(const QByteArray &json, const QString &key= QString());
     QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) Q_DECL_OVERRIDE;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const Q_DECL_OVERRIDE;

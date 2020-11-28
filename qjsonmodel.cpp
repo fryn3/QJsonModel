@@ -229,7 +229,7 @@ bool QJsonModel::appendToArray(const QByteArray &json, const QString &key)
 
     beginResetModel();
     auto value = jdoc.isArray() ? QJsonValue(jdoc.array()) : QJsonValue(jdoc.object());
-    mRootItem->appendChild(QJsonTreeItem::load(value, mRootItem, key.isEmpty() ? QString::number(mRootItem->childCount()) : key));
+    mRootItem->appendChild(QJsonTreeItem::load(value, mRootItem, key));
     endResetModel();
 
     return true;
