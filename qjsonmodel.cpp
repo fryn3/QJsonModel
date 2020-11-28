@@ -393,18 +393,15 @@ Qt::ItemFlags QJsonModel::flags(const QModelIndex &index) const
 QJsonDocument QJsonModel::json() const
 {
     auto v = genJson(mRootItem);
-    QJsonDocument doc;
 
-    if (v.isObject())
+    if (v.isArray())
     {
-        doc = QJsonDocument(v.toObject());
+        return QJsonDocument(v.toArray());
     }
     else
     {
-        doc = QJsonDocument(v.toArray());
+        return QJsonDocument(v.toObject());
     }
-
-    return doc;
 }
 
 QJsonValue QJsonModel::genJson(QJsonTreeItem *item) const
