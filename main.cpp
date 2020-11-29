@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
                            "streetAddress": "21 2nd Street",
                            "city": "New York",
                            "state": "NY",
-                           "postalCode": "10021"
+                           "postalCode": 10021
                        },
                        "phoneNumber":
                        [
@@ -60,6 +60,8 @@ int main(int argc, char *argv[])
 
     model->loadJson(QByteArray::fromStdString(json));
     view->show();
+    a.exec();
+    qDebug() << model->json().toJson();
 
-    return a.exec();
+    return 0;
 }

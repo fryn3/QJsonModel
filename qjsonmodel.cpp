@@ -29,173 +29,131 @@
 #include <memory>
 
 QJsonTreeItem::QJsonTreeItem(QJsonTreeItem *parent)
-    : mParent(parent)
-{
-}
+    : mParent(parent) { }
 
 QJsonTreeItem::QJsonTreeItem(const QJsonValue &value, QJsonTreeItem *parent, const QString &key)
-    : mKey(key), mParent(parent)
-{
-    if (value.isObject())
-    {
+    : mKey(key), mParent(parent) {
+    if (value.isObject()) {
         mValue = QJsonObject();
         //Get all QJsonValue childs
-        for (QString key : value.toObject().keys())
-        {
+        for (QString key : value.toObject().keys()) {
             QJsonValue v = value.toObject().value(key);
             QJsonTreeItem *child = new QJsonTreeItem(v, this, key);
             appendChild(child);
         }
-    }
-    else if (value.isArray())
-    {
+    } else if (value.isArray()) {
         mValue = QJsonArray();
         //Get all QJsonValue childs
-        for (QJsonValue v : value.toArray())
-        {
+        for (QJsonValue v : value.toArray()) {
             QJsonTreeItem *child = new QJsonTreeItem(v, this);
             appendChild(child);
         }
-    }
-    else
-    {
+    } else {
         mValue = value;
     }
 }
 
-QJsonTreeItem::~QJsonTreeItem()
-{
+QJsonTreeItem::~QJsonTreeItem() {
     qDeleteAll(mChilds);
 }
 
-void QJsonTreeItem::appendChild(QJsonTreeItem *item)
-{
+void QJsonTreeItem::appendChild(QJsonTreeItem *item) {
     mChilds.append(item);
 }
 
-QJsonTreeItem *QJsonTreeItem::child(int row)
-{
+QJsonTreeItem *QJsonTreeItem::child(int row) {
     return mChilds.value(row);
 }
 
-QJsonTreeItem *QJsonTreeItem::parent()
-{
+QJsonTreeItem *QJsonTreeItem::parent() {
     return mParent;
 }
 
-int QJsonTreeItem::childCount() const
-{
+int QJsonTreeItem::childCount() const {
     return mChilds.count();
 }
 
-int QJsonTreeItem::row() const
-{
+int QJsonTreeItem::row() const {
     return mParent ? mParent->mChilds.indexOf(const_cast<QJsonTreeItem*>(this)) : 0;
 }
 
-void QJsonTreeItem::setKey(const QString &key)
-{
+void QJsonTreeItem::setKey(const QString &key) {
     mKey = key;
 }
 
-bool QJsonTreeItem::setValue(const QJsonValue &value)
-{
-    if (isArrayOrObject() || value.isArray() || value.isObject())
-    {
+bool QJsonTreeItem::setValue(const QJsonValue &value) {
+    if (isArrayOrObject() || value.isArray() || value.isObject()) {
         return false;
     }
     mValue = value;
     return true;
 }
 
-const QString &QJsonTreeItem::key() const
-{
+const QString &QJsonTreeItem::key() const {
     return mKey;
 }
 
-const QJsonValue &QJsonTreeItem::value() const
-{
+const QJsonValue &QJsonTreeItem::value() const {
     return mValue;
 }
 
-QJsonValue::Type QJsonTreeItem::type() const
-{
+QJsonValue::Type QJsonTreeItem::type() const {
     return mValue.type();
 }
 
-bool QJsonTreeItem::isArrayOrObject() const
-{
+bool QJsonTreeItem::isArrayOrObject() const {
     return type() == QJsonValue::Array || type() == QJsonValue::Object;
 }
 
 const std::array<QString, 2> QJsonModel::mHEADERS_STR { "key", "value" };
 
 QJsonModel::QJsonModel(QObject *parent)
-    : QAbstractItemModel(parent)
-    , mRootItem(new QJsonTreeItem())
-{
-}
+    : QAbstractItemModel(parent), mRootItem(new QJsonTreeItem()) { }
 
 QJsonModel::QJsonModel(const QString &fileName, QObject *parent)
-    : QAbstractItemModel(parent)
-    , mRootItem(new QJsonTreeItem())
-{
+    : QAbstractItemModel(parent), mRootItem(new QJsonTreeItem()) {
     load(fileName);
 }
 
 QJsonModel::QJsonModel(QIODevice *device, QObject *parent)
-    : QAbstractItemModel(parent)
-    , mRootItem(new QJsonTreeItem())
-{
+    : QAbstractItemModel(parent), mRootItem(new QJsonTreeItem()) {
     load(device);
 }
 
 QJsonModel::QJsonModel(const QByteArray &json, QObject *parent)
-    : QAbstractItemModel(parent)
-    , mRootItem(new QJsonTreeItem())
-{
+    : QAbstractItemModel(parent), mRootItem(new QJsonTreeItem()) {
     loadJson(json);
 }
 
-QJsonModel::~QJsonModel()
-{
-}
+QJsonModel::~QJsonModel() { }
 
-bool QJsonModel::load(const QString &fileName)
-{
+bool QJsonModel::load(const QString &fileName) {
     QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly))
-    {
+    if (!file.open(QIODevice::ReadOnly)) {
         return false;
     }
 
     return load(&file);
 }
 
-bool QJsonModel::load(QIODevice *device)
-{
+bool QJsonModel::load(QIODevice *device) {
     return loadJson(device->readAll());
 }
 
-bool QJsonModel::loadJson(const QByteArray &json)
-{
+bool QJsonModel::loadJson(const QByteArray &json) {
     QJsonParseError parse_error;
     auto jdoc = QJsonDocument::fromJson(json, &parse_error);
 
-    if (jdoc.isNull())
-    {
+    if (jdoc.isNull()) {
         qDebug() << Q_FUNC_INFO << "Cannot load json." << parse_error.errorString();
         qDebug() << "The input json string is:" << json;
         return false;
     }
 
     beginResetModel();
-    if (jdoc.isArray())
-    {
+    if (jdoc.isArray()) {
         mRootItem = std::make_unique<QJsonTreeItem>(QJsonValue(jdoc.array()), nullptr, "root");
-    }
-    else
-    {
+    } else {
         mRootItem = std::make_unique<QJsonTreeItem>(QJsonValue(jdoc.object()), nullptr, "root");
     }
     endResetModel();
@@ -203,18 +161,15 @@ bool QJsonModel::loadJson(const QByteArray &json)
     return true;
 }
 
-bool QJsonModel::appendToArray(const QByteArray &json)
-{
-    if (mRootItem->type() != QJsonValue::Array)
-    {
+bool QJsonModel::appendToArray(const QByteArray &json) {
+    if (mRootItem->type() != QJsonValue::Array) {
         return false;
     }
 
     QJsonParseError parse_error;
     auto jdoc = QJsonDocument::fromJson(json, &parse_error);
 
-    if (jdoc.isNull())
-    {
+    if (jdoc.isNull()) {
         qDebug() << Q_FUNC_INFO << "Cannot load json." << parse_error.errorString();
         qDebug() << "The input json string is:" << json;
         return false;
@@ -228,41 +183,27 @@ bool QJsonModel::appendToArray(const QByteArray &json)
     return true;
 }
 
-QVariant QJsonModel::data(const QModelIndex &index, int role) const
-{
-    if (!index.isValid())
-    {
+QVariant QJsonModel::data(const QModelIndex &index, int role) const {
+    if (!index.isValid()) {
         return QVariant();
     }
 
     QJsonTreeItem *item = static_cast<QJsonTreeItem*>(index.internalPointer());
 
-    if (role == Qt::DisplayRole)
-    {
-        if (index.column() == 0)
-        {
-            if (item->parent()->value().type() == QJsonValue::Array)
-            {
+    if (role == Qt::DisplayRole) {
+        if (index.column() == 0) {
+            if (item->parent()->value().type() == QJsonValue::Array) {
                 return QString("[%1]").arg(item->row());
-            }
-            else
-            {
+            } else {
                 return item->key();
             }
-        }
-        else if (index.column() == 1)
-        {
+        } else if (index.column() == 1) {
             return item->value().toVariant();
         }
-    }
-    else if (role == Qt::EditRole)
-    {
-        if (index.column() == 0)
-        {
+    } else if (role == Qt::EditRole) {
+        if (index.column() == 0) {
             return item->key();
-        }
-        else if (index.column() == 1)
-        {
+        } else if (index.column() == 1) {
             return item->value().toVariant();
         }
     }
@@ -270,19 +211,13 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-bool QJsonModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-    if (role == Qt::EditRole)
-    {
+bool QJsonModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+    if (role == Qt::EditRole) {
         QJsonTreeItem *item = static_cast<QJsonTreeItem*>(index.internalPointer());
-        if (index.column() == 0)
-        {
+        if (index.column() == 0) {
             item->setKey(value.toString());
-        }
-        else if (index.column() == 1)
-        {
-            if (!item->setValue(QJsonValue::fromVariant(value)))
-            {
+        } else if (index.column() == 1) {
+            if (!item->setValue(QJsonValue::fromVariant(value))) {
                 return false;
             }
         }
@@ -293,64 +228,48 @@ bool QJsonModel::setData(const QModelIndex &index, const QVariant &value, int ro
     return false;
 }
 
-QVariant QJsonModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
-    if (role != Qt::DisplayRole)
-    {
+QVariant QJsonModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    if (role != Qt::DisplayRole) {
         return QVariant();
     }
 
-    if (orientation == Qt::Horizontal && section >= 0 && section < columnCount())
-    {
+    if (orientation == Qt::Horizontal && section >= 0 && section < columnCount()) {
         return mHEADERS_STR.at(section);
-    }
-    else
-    {
+    } else {
         return QVariant();
     }
 }
 
-QModelIndex QJsonModel::index(int row, int column, const QModelIndex &parent) const
-{
-    if (!hasIndex(row, column, parent))
-    {
+QModelIndex QJsonModel::index(int row, int column, const QModelIndex &parent) const {
+    if (!hasIndex(row, column, parent)) {
         return QModelIndex();
     }
 
     QJsonTreeItem *parentItem;
 
-    if (!parent.isValid())
-    {
+    if (!parent.isValid()) {
         parentItem = mRootItem.get();
-    }
-    else
-    {
+    } else {
         parentItem = static_cast<QJsonTreeItem*>(parent.internalPointer());
     }
 
     QJsonTreeItem *childItem = parentItem->child(row);
-    if (childItem)
-    {
+    if (childItem) {
         return createIndex(row, column, childItem);
-    }
-    else
-    {
+    } else {
         return QModelIndex();
     }
 }
 
-QModelIndex QJsonModel::parent(const QModelIndex &index) const
-{
-    if (!index.isValid())
-    {
+QModelIndex QJsonModel::parent(const QModelIndex &index) const {
+    if (!index.isValid()) {
         return QModelIndex();
     }
 
     QJsonTreeItem *item = static_cast<QJsonTreeItem*>(index.internalPointer());
     QJsonTreeItem *parentItem = item->parent();
 
-    if (parentItem == mRootItem.get())
-    {
+    if (parentItem == mRootItem.get()) {
         return QModelIndex();
     }
 
@@ -359,80 +278,60 @@ QModelIndex QJsonModel::parent(const QModelIndex &index) const
 
 int QJsonModel::rowCount(const QModelIndex &parent) const
 {
-    if (!parent.isValid())
-    {
+    if (!parent.isValid()) {
         return mRootItem->childCount();
-    }
-    else
-    {
+    } else {
         return static_cast<QJsonTreeItem*>(parent.internalPointer())->childCount();
     }
 }
 
-int QJsonModel::columnCount(const QModelIndex &parent) const
-{
+int QJsonModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent)
 
     return mHEADERS_STR.size();
 }
 
-Qt::ItemFlags QJsonModel::flags(const QModelIndex &index) const
-{
+Qt::ItemFlags QJsonModel::flags(const QModelIndex &index) const {
     auto item = static_cast<QJsonTreeItem*>(index.internalPointer());
 
     if (((index.column() == 1) && !(item->isArrayOrObject()))
-            || (index.column() == 0 && item->parent()->type() != QJsonValue::Array))
-    {
+            || (index.column() == 0 && item->parent()->type() != QJsonValue::Array)) {
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
-    }
-    else
-    {
+    } else {
         return QAbstractItemModel::flags(index);
     }
 }
 
-QJsonDocument QJsonModel::json() const
-{
+QJsonDocument QJsonModel::json() const {
     auto v = genJson(mRootItem.get());
 
-    if (v.isArray())
-    {
+    if (v.isArray()) {
         return QJsonDocument(v.toArray());
-    }
-    else
-    {
+    } else {
         return QJsonDocument(v.toObject());
     }
 }
 
-QJsonValue QJsonModel::genJson(QJsonTreeItem *item) const
-{
+QJsonValue QJsonModel::genJson(QJsonTreeItem *item) const {
     auto type = item->type();
     int nchild = item->childCount();
 
-    if (QJsonValue::Object == type)
-    {
+    if (QJsonValue::Object == type) {
         QJsonObject jo;
-        for (int i = 0; i < nchild; ++i)
-        {
+        for (int i = 0; i < nchild; ++i) {
             auto ch = item->child(i);
             auto key = ch->key();
             jo.insert(key, genJson(ch));
         }
         return jo;
-    }
-    else if (QJsonValue::Array == type)
-    {
+    } else if (QJsonValue::Array == type) {
         QJsonArray arr;
-        for (int i = 0; i < nchild; ++i)
-        {
+        for (int i = 0; i < nchild; ++i) {
             auto ch = item->child(i);
             arr.append(genJson(ch));
         }
         return arr;
-    }
-    else
-    {
+    } else {
         return item->value();
     }
 }
