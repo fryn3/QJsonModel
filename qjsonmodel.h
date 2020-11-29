@@ -42,7 +42,8 @@
 class QJsonTreeItem
 {
 public:
-    QJsonTreeItem(QJsonTreeItem *parent = nullptr);
+    explicit QJsonTreeItem(QJsonTreeItem *parent = nullptr);
+    explicit QJsonTreeItem(const QJsonValue &value, QJsonTreeItem *parent = nullptr, const QString &key = QString());
     ~QJsonTreeItem();
     void appendChild(QJsonTreeItem *item);
     QJsonTreeItem *child(int row);
@@ -55,20 +56,17 @@ public:
      */
     int row() const;
     void setKey(const QString &key);
-    void setValue(const QJsonValue &value);
+    bool setValue(const QJsonValue &value);
     const QString &key() const;
     const QJsonValue &value() const;
     QJsonValue::Type type() const;
-
-public:
-    static QJsonTreeItem *load(const QJsonValue &value, QJsonTreeItem *parent = 0, const QString &key="root");
+    bool isArrayOrObject() const;
 
 private:
     QString mKey;
     QJsonValue mValue;
     QList<QJsonTreeItem*> mChilds;
     QJsonTreeItem *mParent;
-
 };
 
 /*!
@@ -79,12 +77,13 @@ class QJsonModel : public QAbstractItemModel
 {
     Q_OBJECT
 
+    static const std::array<QString, 2> mHEADERS_STR;
 public:
     explicit QJsonModel(QObject *parent = nullptr);
-    QJsonModel(const QString &fileName, QObject *parent = nullptr);
-    QJsonModel(QIODevice *device, QObject *parent = nullptr);
-    QJsonModel(const QByteArray &json, QObject *parent = nullptr);
-    ~QJsonModel();
+    explicit QJsonModel(const QString &fileName, QObject *parent = nullptr);
+    explicit QJsonModel(QIODevice *device, QObject *parent = nullptr);
+    explicit QJsonModel(const QByteArray &json, QObject *parent = nullptr);
+    virtual ~QJsonModel();
     bool load(const QString &fileName);
     bool load(QIODevice *device);
     bool loadJson(const QByteArray &json);
@@ -94,10 +93,9 @@ public:
      *
      * Works only if mRootItem->type() == QJsonValue::Array.
      * \param json - array in JSON format.
-     * \param key - the key of the node for QJsonTreeItem.
      * \return true if success.
      */
-    bool appendToArray(const QByteArray &json, const QString &key= QString());
+    bool appendToArray(const QByteArray &json);
     QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) Q_DECL_OVERRIDE;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const Q_DECL_OVERRIDE;
@@ -112,9 +110,7 @@ private:
     QJsonValue genJson(QJsonTreeItem *item) const;
 
 private:
-    QJsonTreeItem *mRootItem;
-    QStringList mHeaders;
-
+    std::unique_ptr<QJsonTreeItem> mRootItem;
 };
 
 
