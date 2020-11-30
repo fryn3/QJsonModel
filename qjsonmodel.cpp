@@ -77,8 +77,18 @@ int QJsonTreeItem::row() const {
     return mParent ? mParent->mChilds.indexOf(const_cast<QJsonTreeItem*>(this)) : 0;
 }
 
-void QJsonTreeItem::setKey(const QString &key) {
+bool QJsonTreeItem::setKey(const QString &key) {
+    if (!mParent) {
+        mKey = key;
+        return true;
+    }
+    for (const auto &itCh: mParent->mChilds) {
+        if (itCh->key() == key) {
+            return false;
+        }
+    }
     mKey = key;
+    return true;
 }
 
 bool QJsonTreeItem::setValue(const QJsonValue &value) {
@@ -190,7 +200,10 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const {
 
     QJsonTreeItem *item = static_cast<QJsonTreeItem*>(index.internalPointer());
 
-    if (role == Qt::DisplayRole) {
+    if (!item) {
+        qDebug() << __PRETTY_FUNCTION__ << index;
+        return QVariant();
+    } else if (role == Qt::DisplayRole) {
         if (index.column() == 0) {
             if (item->parent()->value().type() == QJsonValue::Array) {
                 return QString("[%1]").arg(item->row());
@@ -247,10 +260,10 @@ QModelIndex QJsonModel::index(int row, int column, const QModelIndex &parent) co
 
     QJsonTreeItem *parentItem;
 
-    if (!parent.isValid()) {
-        parentItem = mRootItem.get();
-    } else {
+    if (parent.isValid()) {
         parentItem = static_cast<QJsonTreeItem*>(parent.internalPointer());
+    } else {
+        parentItem = mRootItem.get();
     }
 
     QJsonTreeItem *childItem = parentItem->child(row);

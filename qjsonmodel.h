@@ -55,7 +55,7 @@ public:
      * \return the index from the parent list mChilds.
      */
     int row() const;
-    void setKey(const QString &key);
+    bool setKey(const QString &key);
     bool setValue(const QJsonValue &value);
     const QString &key() const;
     const QJsonValue &value() const;
