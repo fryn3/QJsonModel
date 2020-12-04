@@ -58,10 +58,7 @@ int main(int argc, char *argv[])
 
 
 
-    model->loadJson(QByteArray::fromStdString(json));
+    model->load(QByteArray::fromStdString(json));
     view->show();
-    a.exec();
-    qDebug() << model->json().toJson();
-
-    return 0;
+    return a.exec();
 }
