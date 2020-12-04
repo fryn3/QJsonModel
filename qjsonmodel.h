@@ -44,29 +44,32 @@ class QJsonTreeItem
 public:
     explicit QJsonTreeItem(QJsonTreeItem *parent = nullptr);
     explicit QJsonTreeItem(const QJsonValue &value, QJsonTreeItem *parent = nullptr, const QString &key = QString());
-    ~QJsonTreeItem();
-    void appendChild(QJsonTreeItem *item);
-    QJsonTreeItem *child(int row);
+    explicit QJsonTreeItem(const QVariant &value, QJsonTreeItem *parent = nullptr, const QString &key = QString());
+    ~QJsonTreeItem() = default;
+    void appendChild(std::shared_ptr<QJsonTreeItem> item);
     QJsonTreeItem *parent();
+    std::shared_ptr<QJsonTreeItem> child(int row);
     int childCount() const;
 
     /*!
      * \brief Returns the index from the parent.
-     * \return the index from the parent list mChilds.
+     * \return the index from the parent list mChilds or -1.
      */
     int row() const;
     bool setKey(const QString &key);
     bool setValue(const QJsonValue &value);
+    bool setValue(const QVariant &value);
     const QString &key() const;
     const QJsonValue &value() const;
     QJsonValue::Type type() const;
     bool isArrayOrObject() const;
+    QJsonValue jsonValue() const;
 
 private:
+    QJsonTreeItem *mParent;
     QString mKey;
     QJsonValue mValue;
-    QList<QJsonTreeItem*> mChilds;
-    QJsonTreeItem *mParent;
+    QList<std::shared_ptr<QJsonTreeItem>> mChilds;
 };
 
 /*!
@@ -83,11 +86,17 @@ public:
     explicit QJsonModel(const QString &fileName, QObject *parent = nullptr);
     explicit QJsonModel(QIODevice *device, QObject *parent = nullptr);
     explicit QJsonModel(const QByteArray &json, QObject *parent = nullptr);
-    virtual ~QJsonModel();
+    virtual ~QJsonModel() = default;
     bool load(const QString &fileName);
     bool load(QIODevice *device);
-    bool loadJson(const QByteArray &json);
+    bool load(const QByteArray &json);
+    bool load(const QJsonDocument &json);
+    void clear();
+public slots:
+    bool addChildren(const QModelIndex &index, const QVariant &value = QVariant(), const QString &key = QString());
+    bool addSibling(const QModelIndex &index, const QVariant &value = QVariant(), const QString &key = QString());
 
+public:
     /*!
      * \brief Appending a JSON node at the end of the array
      *
@@ -104,13 +113,12 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     Qt::ItemFlags flags(const QModelIndex &index) const Q_DECL_OVERRIDE;
-    QJsonDocument json() const;
-
+    QJsonDocument toJsonDoc() const;
+    QJsonValue toJson() const;
+    QCborValue toCbor() const;
+    QByteArray toByteArray(bool isJson) const;
 private:
-    QJsonValue genJson(QJsonTreeItem *item) const;
-
-private:
-    std::unique_ptr<QJsonTreeItem> mRootItem;
+    std::shared_ptr<QJsonTreeItem> mRootItem;
 };
 
 
