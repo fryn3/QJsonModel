@@ -11,13 +11,7 @@ lessThan(QT_MAJOR_VERSION, 5): error("requires Qt 5")
 TARGET = QJsonModel
 TEMPLATE = app
 
+include(QJsonModel.pri)
+
 SOURCES += \
     main.cpp \
-    qjsonmodel.cpp
-
-HEADERS += \
-    qjsonmodel.h
-
-
-
-
