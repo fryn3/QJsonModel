@@ -150,7 +150,7 @@ QJsonValue QJsonTreeItem::jsonValue() const
     }
 }
 
-const std::array<QString, 2> QJsonModel::mHEADERS_STR { "key", "value" };
+const std::array<QString, QJsonModel::ColCount> QJsonModel::HEADERS_STR { "key", "value", "type" };
 
 QJsonModel::QJsonModel(QObject *parent)
     : QAbstractItemModel(parent),
@@ -290,26 +290,41 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const {
         qDebug() << __PRETTY_FUNCTION__ << index;
         return QVariant();
     } else if (role == Qt::DisplayRole) {
-        if (index.column() == 0) {
+        if (index.column() == ColKey) {
             if (item->parent()->value().type() == QJsonValue::Array) {
                 return QString("[%1]").arg(item->row());
             } else {
                 return item->key();
             }
-        } else if (index.column() == 1) {
+        } else if (index.column() == ColValue) {
             switch (item->type()) {
-            case QJsonValue::Null:
-                return "null";
             case QJsonValue::String:
                 return QString("\"%1\"").arg(item->value().toString());
             default:
                 return item->value().toVariant();
             }
+        } else if (index.column() == ColType) {
+            switch (item->type()) {
+            case QJsonValue::Null:
+                return "null";
+            case QJsonValue::Bool:
+                return "bool";
+            case QJsonValue::Double:
+                return "double";
+            case QJsonValue::String:
+                return "string";
+            case QJsonValue::Array:
+                return QString("Array [%1]").arg(item->childCount());
+            case QJsonValue::Object:
+                return QString("Object [%1]").arg(item->childCount());
+            default:
+                Q_ASSERT(false && "bad item type");
+            }
         }
     } else if (role == Qt::EditRole) {
-        if (index.column() == 0) {
+        if (index.column() == ColKey) {
             return item->key();
-        } else if (index.column() == 1) {
+        } else if (index.column() == ColValue) {
             return item->value().toVariant();
         }
     }
@@ -323,10 +338,10 @@ bool QJsonModel::setData(const QModelIndex &index, const QVariant &value, int ro
     }
     bool success = true;
     auto item = static_cast<QJsonTreeItem*>(index.internalPointer());
-    bool isRemoveRows = item->isArrayOrObject() && index.column() != 0;
-    if (index.column() == 0) {
+    bool isRemoveRows = item->isArrayOrObject() && index.column() != ColKey;
+    if (index.column() == ColKey) {
         success = item->setKey(value.toString());
-    } else if (index.column() == 1) {
+    } else if (index.column() == ColValue) {
         if (isRemoveRows) {
             beginRemoveRows(index, 0, item->childCount());
             success = item->setValue(value);
@@ -350,7 +365,7 @@ QVariant QJsonModel::headerData(int section, Qt::Orientation orientation, int ro
     }
 
     if (orientation == Qt::Horizontal && section >= 0 && section < columnCount()) {
-        return mHEADERS_STR.at(section);
+        return HEADERS_STR.at(section);
     } else {
         return QVariant();
     }
@@ -404,14 +419,15 @@ int QJsonModel::rowCount(const QModelIndex &parent) const
 int QJsonModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent)
 
-    return mHEADERS_STR.size();
+    return HEADERS_STR.size();
 }
 
 Qt::ItemFlags QJsonModel::flags(const QModelIndex &index) const {
     auto item = static_cast<QJsonTreeItem*>(index.internalPointer());
 
-    if (((index.column() == 1) && !(item->isArrayOrObject()))
-            || (index.column() == 0 && item->parent()->type() != QJsonValue::Array)) {
+    if (((index.column() ==ColValue) && !(item->isArrayOrObject()))
+            || (index.column() == ColKey
+                && item->parent()->type() != QJsonValue::Array)) {
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
     } else {
         return QAbstractItemModel::flags(index);

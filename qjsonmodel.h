@@ -80,8 +80,16 @@ class QJsonModel : public QAbstractItemModel
 {
     Q_OBJECT
 
-    static const std::array<QString, 2> mHEADERS_STR;
 public:
+    enum Columns {
+        ColKey,
+        ColValue,
+        ColType,
+
+        ColCount
+    };
+    static const std::array<QString, ColCount> HEADERS_STR;
+
     explicit QJsonModel(QObject *parent = nullptr);
     explicit QJsonModel(const QString &fileName, QObject *parent = nullptr);
     explicit QJsonModel(QIODevice *device, QObject *parent = nullptr);
