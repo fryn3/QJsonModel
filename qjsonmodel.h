@@ -30,7 +30,6 @@
 #include <QJsonValue>
 #include <QJsonArray>
 #include <QJsonObject>
-#include <QIcon>
 
 /*!
  * \class QJsonTreeItem

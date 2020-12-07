@@ -93,13 +93,13 @@ bool QJsonTreeItem::setValue(const QJsonValue &value) {
     mChilds.clear();
     if (value.isObject()) {
         mValue = QJsonObject();
-        for (QString k : value.toObject().keys()) {
+        for (const QString &k : value.toObject().keys()) {
             QJsonValue v = value.toObject().value(k);
             appendChild(std::make_shared<QJsonTreeItem>(v, this, k));
         }
     } else if (value.isArray()) {
         mValue = QJsonArray();
-        for (QJsonValue v : value.toArray()) {
+        for (const QJsonValue &v : value.toArray()) {
             appendChild(std::make_shared<QJsonTreeItem>(v, this));
         }
     } else {
