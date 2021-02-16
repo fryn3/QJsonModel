@@ -6,9 +6,9 @@ Requires https://github.com/mottosso/Qt.py
 Usage:
     Use it like you would the C++ version.
 
-    >>> import qjsonmodel
-    >>> model = qjsonmodel.QJsonModel()
-    >>> model.load({"key": "value"})
+    import qjsonmodel
+    model = qjsonmodel.QJsonModel()
+    model.load({"key": "value"})
 
 Test:
     Run the provided example to sanity check your Python,
@@ -39,7 +39,7 @@ Changes:
 
 import json
 
-from Qt import QtWidgets, QtCore, __binding__
+from Qt import QtWidgets, QtCore
 
 
 class QJsonTreeItem(object):
@@ -129,7 +129,7 @@ class QJsonModel(QtCore.QAbstractItemModel):
         super(QJsonModel, self).__init__(parent)
 
         self._rootItem = QJsonTreeItem()
-        self._headers = ("key", "value")
+        self._headers = ("key", "value", "type")
 
     def load(self, document):
         """Load from dictionary
@@ -181,6 +181,9 @@ class QJsonModel(QtCore.QAbstractItemModel):
             if index.column() == 1:
                 return item.value
 
+            if index.column() == 2:
+                return item.type(self.value)
+
         elif role == QtCore.Qt.EditRole:
             if index.column() == 1:
                 return item.value
@@ -190,12 +193,6 @@ class QJsonModel(QtCore.QAbstractItemModel):
             if index.column() == 1:
                 item = index.internalPointer()
                 item.value = str(value)
-
-                if __binding__ in ("PySide", "PyQt4"):
-                    self.dataChanged.emit(index, index)
-                else:
-                    self.dataChanged.emit(index, index, [QtCore.Qt.EditRole])
-
                 return True
 
         return False
@@ -311,8 +308,8 @@ if __name__ == '__main__':
     """)
 
     model.load(document)
-    model.clear()
-    model.load(document)
+    # model.clear()
+    # model.load(document)
 
     # Sanity check
     assert (

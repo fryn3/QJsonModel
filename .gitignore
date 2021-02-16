@@ -30,3 +30,6 @@
 # Qt 
 *.pro.user 
 
+
+--- MY ---
+/__pycache__/
