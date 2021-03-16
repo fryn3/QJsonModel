@@ -27,6 +27,13 @@
 #include <QDebug>
 #include <QFont>
 #include <memory>
+#include <QQmlEngine>
+
+static bool qmlRegisterType(QString itemName) {
+    qmlRegisterType<QJsonModel>(QString("cpp.%1").arg(itemName).toUtf8(),
+                       12, 34, itemName.toUtf8());
+    return true;
+}
 
 QJsonTreeItem::QJsonTreeItem(QJsonTreeItem *parent)
     : mParent(parent) { }
@@ -150,7 +157,14 @@ QJsonValue QJsonTreeItem::jsonValue() const
     }
 }
 
-const std::array<QString, QJsonModel::ColCount> QJsonModel::HEADERS_STR { "key", "value", "type" };
+// QJsonModel
+
+const QString QJsonModel::ITEM_NAME = "QJsonModel";
+
+const bool QJsonModel::IS_QML_REG = qmlRegisterType(QJsonModel::ITEM_NAME);
+
+const std::array<QString, QJsonModel::ColEnd - QJsonModel::ColBegin>
+                        QJsonModel::HEADERS_STR { "key", "value", "type" };
 
 QJsonModel::QJsonModel(QObject *parent)
     : QAbstractItemModel(parent),
@@ -283,27 +297,33 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const {
     if (!index.isValid()) {
         return QVariant();
     }
-
     auto item = static_cast<QJsonTreeItem*>(index.internalPointer());
 
     if (!item) {
         qDebug() << __PRETTY_FUNCTION__ << index;
         return QVariant();
-    } else if (role == Qt::DisplayRole) {
-        if (index.column() == ColKey) {
+    }
+    if (role >= Qt::UserRole) {
+        return data(QJsonModel::index(index.row(), role - Qt::UserRole, index.parent()),
+                    Qt::DisplayRole);
+    }
+    switch (role) {
+    case Qt::DisplayRole:
+        switch (index.column() + Qt::UserRole) {
+        case ColKey:
             if (item->parent()->value().type() == QJsonValue::Array) {
                 return QString("[%1]").arg(item->row());
             } else {
                 return item->key();
             }
-        } else if (index.column() == ColValue) {
+        case ColValue:
             switch (item->type()) {
             case QJsonValue::String:
                 return QString("\"%1\"").arg(item->value().toString());
             default:
                 return item->value().toVariant();
             }
-        } else if (index.column() == ColType) {
+        case ColType:
             switch (item->type()) {
             case QJsonValue::Null:
                 return "null";
@@ -320,11 +340,14 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const {
             default:
                 Q_ASSERT(false && "bad item type");
             }
+        default:
+            Q_ASSERT(false && "bad column");
         }
-    } else if (role == Qt::EditRole) {
-        if (index.column() == ColKey) {
+    case Qt::EditRole:
+        switch (index.column() + Qt::UserRole) {
+        case ColKey:
             return item->key();
-        } else if (index.column() == ColValue) {
+        default:
             return item->value().toVariant();
         }
     }
@@ -432,6 +455,14 @@ Qt::ItemFlags QJsonModel::flags(const QModelIndex &index) const {
     } else {
         return QAbstractItemModel::flags(index);
     }
+}
+
+QHash<int, QByteArray> QJsonModel::roleNames() const {
+    auto roles = QAbstractItemModel::roleNames();
+    for (uint i = 0; i < HEADERS_STR.size(); ++i) {
+        roles.insert(ColBegin + i, HEADERS_STR.at(i).toUtf8());
+    }
+    return roles;
 }
 
 QJsonDocument QJsonModel::toJsonDoc() const {

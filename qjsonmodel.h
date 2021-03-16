@@ -80,14 +80,18 @@ class QJsonModel : public QAbstractItemModel
     Q_OBJECT
 
 public:
+    static const QString ITEM_NAME;     // QJsonModel
+    static const bool IS_QML_REG;
+
     enum Columns {
-        ColKey,
+        ColBegin = Qt::UserRole,
+        ColKey = ColBegin,
         ColValue,
         ColType,
 
-        ColCount
+        ColEnd
     };
-    static const std::array<QString, ColCount> HEADERS_STR;
+    static const std::array<QString, ColEnd - ColBegin> HEADERS_STR;
 
     explicit QJsonModel(QObject *parent = nullptr);
     explicit QJsonModel(const QString &fileName, QObject *parent = nullptr);
@@ -120,6 +124,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
     Qt::ItemFlags flags(const QModelIndex &index) const Q_DECL_OVERRIDE;
+    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
     QJsonDocument toJsonDoc() const;
     QJsonValue toJson() const;
     QCborValue toCbor() const;
