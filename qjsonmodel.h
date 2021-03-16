@@ -91,6 +91,7 @@ public:
 
         ColEnd
     };
+    Q_ENUM(Columns)
     static const std::array<QString, ColEnd - ColBegin> HEADERS_STR;
 
     explicit QJsonModel(QObject *parent = nullptr);
