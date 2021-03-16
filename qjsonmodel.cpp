@@ -318,13 +318,11 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const {
             }
         case ColValue:
             switch (item->type()) {
-            case QJsonValue::String:
-                return QString("\"%1\"").arg(item->value().toString());
-            default:
-                if (item->type() != QJsonValue::Object) {
-                    return item->value().toVariant();
-                }
+            case QJsonValue::Object:
+            case QJsonValue::Array:
                 return QVariant();
+            default:
+                return item->value().toVariant();
             }
         case ColType:
             switch (item->type()) {
