@@ -99,11 +99,11 @@ public:
     explicit QJsonModel(QIODevice *device, QObject *parent = nullptr);
     explicit QJsonModel(const QByteArray &json, QObject *parent = nullptr);
     virtual ~QJsonModel() = default;
-    bool load(const QString &fileName);
+    Q_INVOKABLE bool load(const QString &fileName);
     bool load(QIODevice *device);
-    bool load(const QByteArray &json);
+    Q_INVOKABLE bool load(const QByteArray &json);
     bool load(const QJsonDocument &json);
-    void clear();
+    Q_INVOKABLE void clear();
 public slots:
     bool addChildren(const QModelIndex &index, const QVariant &value = QVariant(), const QString &key = QString());
     bool addSibling(const QModelIndex &index, const QVariant &value = QVariant(), const QString &key = QString());
@@ -127,8 +127,8 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const Q_DECL_OVERRIDE;
     QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
     QJsonDocument toJsonDoc() const;
-    QJsonValue toJson() const;
-    QCborValue toCbor() const;
+    Q_INVOKABLE QJsonValue toJson() const;
+    Q_INVOKABLE QCborValue toCbor() const;
     QByteArray toByteArray(bool isJson) const;
 private:
     std::shared_ptr<QJsonTreeItem> mRootItem;
