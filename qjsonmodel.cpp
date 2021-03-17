@@ -331,7 +331,7 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const {
             case QJsonValue::Bool:
                 return "bool";
             case QJsonValue::Double:
-                return "double";
+                return "number";
             case QJsonValue::String:
                 return "string";
             case QJsonValue::Array:
