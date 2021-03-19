@@ -357,15 +357,19 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const {
 }
 
 bool QJsonModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+    if (role >= Qt::UserRole) {
+        qDebug() << __PRETTY_FUNCTION__ << "todo";
+        return false;
+    }
     if (role != Qt::EditRole) {
         return false;
     }
     bool success = true;
     auto item = static_cast<QJsonTreeItem*>(index.internalPointer());
-    bool isRemoveRows = item->isArrayOrObject() && index.column() != ColKey;
-    if (index.column() == ColKey) {
+    bool isRemoveRows = item->isArrayOrObject() && index.column() != ColKey - Qt::UserRole;
+    if (index.column() == ColKey - Qt::UserRole) {
         success = item->setKey(value.toString());
-    } else if (index.column() == ColValue) {
+    } else if (index.column() == ColValue - Qt::UserRole) {
         if (isRemoveRows) {
             beginRemoveRows(index, 0, item->childCount());
             success = item->setValue(value);
@@ -449,8 +453,8 @@ int QJsonModel::columnCount(const QModelIndex &parent) const {
 Qt::ItemFlags QJsonModel::flags(const QModelIndex &index) const {
     auto item = static_cast<QJsonTreeItem*>(index.internalPointer());
 
-    if (((index.column() ==ColValue) && !(item->isArrayOrObject()))
-            || (index.column() == ColKey
+    if (((index.column() == ColValue - Qt::UserRole) && !(item->isArrayOrObject()))
+            || (index.column() == ColKey - Qt::UserRole
                 && item->parent()->type() != QJsonValue::Array)) {
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
     } else {
