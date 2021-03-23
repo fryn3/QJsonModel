@@ -129,7 +129,16 @@ public:
     QJsonDocument toJsonDoc() const;
     Q_INVOKABLE QJsonValue toJson() const;
     Q_INVOKABLE QCborValue toCbor() const;
-    QByteArray toByteArray(bool isJson) const;
+
+    /*!
+     * \brief Переводит в QByteArray.
+     *
+     * Модет переводить в строковоковое представление (при isJson = true),
+     * либо в бинарном(CBOR) виде (при isJson = false).
+     * \param isJson - тип возвращаемого массива.
+     * \return массив байт.
+     */
+    Q_INVOKABLE QByteArray toByteArray(bool isJson) const;
 private:
     std::shared_ptr<QJsonTreeItem> mRootItem;
 };
