@@ -358,8 +358,8 @@ QVariant QJsonModel::data(const QModelIndex &index, int role) const {
 
 bool QJsonModel::setData(const QModelIndex &index, const QVariant &value, int role) {
     if (role >= Qt::UserRole) {
-        qDebug() << __PRETTY_FUNCTION__ << "todo";
-        return false;
+        return setData(QJsonModel::index(index.row(), role - Qt::UserRole, index.parent()),
+                       value, Qt::EditRole);
     }
     if (role != Qt::EditRole) {
         return false;
